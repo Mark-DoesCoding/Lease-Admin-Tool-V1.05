@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lease Administration Tool V1.05</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Light theme (default) */
+    --primary: #A51C30;
+    --primary-dark: #7A1423;
+    --accent: #C41E3A;
+    --accent-hover: #9B1B30;
+    --bg: #F8F4F2;
+    --card: #FFFFFF;
+    --card-alt: #F3EDE9;
+    --text: #2C1A1D;
+    --muted: #6B4E52;
+    --border: #E5D6D8;
+    --danger: #9B1B30;
+    --radius: 8px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    --header-text: #ffffff;
+  }
+
+  body.dark {
+    /* Soft Night Mode – easy on the eyes */
+    --primary: #C41E3A;
+    --primary-dark: #9B1B30;
+    --accent: #E85A6B;
+    --accent-hover: #C41E3A;
+    --bg: #16141A;
+    --card: #221F27;
+    --card-alt: #2A2630;
+    --text: #EDE8E6;
+    --muted: #A89B9E;
+    --border: #3A343C;
+    --danger: #E85A6B;
+    --shadow: 0 1px 4px rgba(0,0,0,0.35);
+    --header-text: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+    min-height: 100vh; font-size: 15px; -webkit-font-smoothing: antialiased;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .app { display: flex; flex-direction: column; min-height: 100vh; }
+  header {
+    background: var(--primary); color: var(--header-text);
+    padding: 0.5rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15); position: relative; z-index: 100;
+  }
+  .brand { display: flex; align-items: center; gap: 0.75rem; }
+  .logo-mark { width: 40px; height: 40px; flex-shrink: 0; border-radius: 6px; overflow: hidden; }
+  .logo-mark svg { width: 100%; height: 100%; display: block; }
+  .logo-text { font-size: 1.15rem; font-weight: 600; letter-spacing: -0.01em; }
+  .nav { display: flex; gap: 0.25rem; align-items: center; }
+  .nav-item {
+    position: relative; padding: 0.45rem 0.9rem; border-radius: 6px;
+    cursor: pointer; font-size: 0.9rem; font-weight: 500; color: rgba(255,255,255,0.93);
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.12); }
+  .dropdown {
+    display: none; position: absolute; top: 100%; left: 0; background: var(--card); color: var(--text);
+    min-width: 180px; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    border: 1px solid var(--border); padding: 0.35rem 0; z-index: 200;
+  }
+  .nav-item:hover .dropdown { display: block; }
+  .dropdown a { display: block; padding: 0.55rem 1rem; color: var(--text); text-decoration: none; font-size: 0.875rem; }
+  .dropdown a:hover { background: var(--card-alt); }
+  .btn {
+    display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1rem;
+    border-radius: var(--radius); border: none; cursor: pointer; font-size: 0.875rem;
+    font-weight: 500; transition: all 0.15s; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--card); color: var(--primary); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--card-alt); }
+  .btn-ghost { background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  .btn-danger { background: #3a1c22; color: #f5c2c7; border: 1px solid #5c2a32; }
+  body:not(.dark) .btn-danger { background: #fff5f5; color: var(--danger); border: 1px solid #f5c2c7; }
+  .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+  main { flex: 1; padding: 1.5rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+  .home-hero { text-align: center; margin-bottom: 2.5rem; }
+  .home-hero h1 { font-size: 1.75rem; color: var(--primary); margin-bottom: 0.5rem; font-weight: 700; }
+  .home-hero p.slogan { color: var(--muted); max-width: 480px; margin: 0 auto 2rem; font-size: 1.1rem; font-weight: 500; }
+  .workflow-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 2.5rem; }
+  .workflow-card {
+    background: var(--card); border-radius: 12px; padding: 1.75rem; box-shadow: var(--shadow);
+    border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .workflow-card:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); border-color: var(--accent); }
+  .workflow-card .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .workflow-card h3 { font-size: 1.1rem; margin-bottom: 0.4rem; color: var(--primary); font-weight: 600; }
+  .workflow-card p { font-size: 0.875rem; color: var(--muted); }
+  .section-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; color: var(--primary); }
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow); padding: 1.25rem; margin-bottom: 1.25rem; }
+  .recent-list, .notif-list, .lease-list { list-style: none; }
+  .recent-list li, .notif-list li { padding: 0.75rem 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
+  .recent-list li { cursor: pointer; }
+  .recent-list li:hover { background: var(--card-alt); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 6px; }
+  .lease-list li { cursor: pointer; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem; border: 1px solid var(--border); background: var(--card-alt); display: flex; justify-content: space-between; align-items: center; }
+  .lease-list li:hover { background: var(--card); border-color: var(--accent); }
+  .badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--card-alt); color: var(--muted); }
+  .view { display: none; } .view.active { display: block; }
+  .back-link { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--accent); cursor: pointer; font-size: 0.9rem; margin-bottom: 1rem; }
+  .back-link:hover { text-decoration: underline; }
+  .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 1.75rem; text-align: center; background: var(--card-alt); cursor: pointer; transition: all 0.2s; }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--accent); background: var(--card); }
+  .upload-zone input { display: none; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin: 1rem 0; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  th, td { padding: 0.65rem 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: var(--card-alt); font-weight: 600; color: var(--primary); }
+  .text-right { text-align: right; } .text-danger { color: var(--danger); }
+  .abstract-section { margin-bottom: 1.5rem; }
+  .abstract-section h4 { font-size: 0.95rem; color: var(--primary); margin-bottom: 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; font-weight: 600; }
+  .field-row { display: grid; grid-template-columns: 220px 1fr; gap: 0.5rem; padding: 0.35rem 0; align-items: start; font-size: 0.9rem; }
+  .field-label { font-weight: 500; color: var(--muted); }
+  .demo-banner { background: var(--card-alt); border: 1px solid var(--border); color: var(--muted); padding: 0.45rem 1rem; text-align: center; font-size: 0.85rem; }
+  .download-wrap { position: relative; display: inline-block; }
+  .download-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.15); min-width: 150px; z-index: 50; }
+  .download-wrap:hover .download-menu { display: block; }
+  .download-menu button { display: block; width: 100%; text-align: left; padding: 0.55rem 1rem; border: none; background: none; cursor: pointer; font-size: 0.875rem; color: var(--text); font-family: inherit; }
+  .download-menu button:hover { background: var(--card-alt); }
+  .viewer-layout { display: grid; grid-template-columns: 1fr 340px; gap: 1rem; height: calc(100vh - 160px); min-height: 500px; }
+  .viewer-layout.chat-closed { grid-template-columns: 1fr; }
+  .lease-pane { background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+  .lease-toolbar { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; background: var(--card-alt); }
+  .lease-content { flex: 1; overflow-y: auto; padding: 1.5rem 2rem; font-size: 0.9rem; line-height: 1.65; }
+  .chat-side { background: var(--card); border: 1px solid var(--border); border-radius: 10px; display: flex; flex-direction: column; overflow: hidden; }
+  .chat-side.hidden { display: none; }
+  .chat-header { background: var(--primary); color: white; padding: 0.65rem 1rem; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+  .chat-header-actions { display: flex; gap: 0.35rem; align-items: center; }
+  .chat-messages { flex: 1; overflow-y: auto; padding: 1rem; display: flex; flex-direction: column; gap: 0.7rem; }
+  .msg { max-width: 92%; padding: 0.55rem 0.85rem; border-radius: 10px; font-size: 0.85rem; }
+  .msg.user { align-self: flex-end; background: var(--accent); color: white; }
+  .msg.assistant { align-self: flex-start; background: var(--card-alt); color: var(--text); }
+  .chat-input { display: flex; gap: 0.4rem; padding: 0.65rem; border-top: 1px solid var(--border); }
+  .chat-input input { flex: 1; padding: 0.45rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; font-family: inherit; background: var(--card); color: var(--text); }
+  .floating-chat-toggle, .night-toggle {
+    position: fixed; right: 1.5rem; width: 52px; height: 52px; border-radius: 50%;
+    border: none; font-size: 1.35rem; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25); z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .night-toggle {
+    bottom: 5.1rem;           /* sits directly above the chat button */
+    background: var(--card-alt); color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .night-toggle:hover { transform: scale(1.06); }
+  .floating-chat-toggle {
+    bottom: 1.5rem; background: var(--primary); color: white;
+  }
+  .floating-chat-toggle:hover { transform: scale(1.06); }
+  .viewer-layout.chat-closed .floating-chat-toggle { display: flex; }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center; justify-content: center; z-index: 2000; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--card); border-radius: 12px; padding: 1.5rem; max-width: 560px; width: 92%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-height: 85vh; overflow-y: auto; color: var(--text); }
+  .about-img { width: 100%; max-height: 280px; object-fit: cover; border-radius: 10px; margin: 1rem 0 1rem; border: 1px solid var(--border); }
+  .about-content { max-width: 720px; margin: 0 auto; font-size: 1.05rem; line-height: 1.7; }
+  .form-group { margin-bottom: 1rem; }
+  .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; }
+  .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; font-family: inherit; background: var(--card); color: var(--text); }
+  .notif-item { cursor: pointer; }
+  .notif-item:hover { background: var(--card-alt); margin: 0 -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; border-radius: 4px; }
+  .sort-bar { display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; }
+  .sort-bar select { padding: 0.4rem 0.75rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card-alt); font-family: inherit; font-size: 0.875rem; color: var(--text); }
+  .recon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
+  @media (max-width: 900px) { .recon-grid { grid-template-columns: 1fr; } .viewer-layout { grid-template-columns: 1fr; height: auto; } }
+  .slot-card { border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; background: var(--card-alt); }
+  .slot-card h4 { color: var(--primary); margin-bottom: 0.75rem; font-size: 0.95rem; }
+  .recon-layout { display: grid; grid-template-columns: 1fr 360px; gap: 1.25rem; }
+  @media (max-width: 1000px) { .recon-layout { grid-template-columns: 1fr; } }
+  .past-chat-item { padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; cursor: pointer; }
+  .past-chat-item:hover { background: var(--card-alt); }
+
+  /* Hide global chat button when on pages that already have a side chat */
+  body.hide-global-chat .floating-chat-toggle { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="demo-banner">DEMO MODE — Fictional data (Maplewood Commerce Centre). Lease Administration Tool V1.05</div>
+  <header>
+    <div class="brand">
+      <div class="logo-mark" title="MP – Lease Administration Tool">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100" height="100" rx="12" fill="#A51C30"/>
+          <text x="50" y="62" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-weight="700" font-size="42" fill="#F8F4F2" letter-spacing="-2">MP</text>
+        </svg>
+      </div>
+      <div class="logo-text">Lease Administration Tool V1.05</div>
+    </div>
+    <div class="nav">
+      <div class="nav-item" onclick="showView('home')">Home</div>
+      <div class="nav-item">
+        Leases
+        <div class="dropdown">
+          <a href="#" onclick="event.preventDefault(); showView('leases-list')">View Leases</a>
+          <a href="#" onclick="event.preventDefault(); showView('add-lease')">Add Lease</a>
+          <a href="#" onclick="event.preventDefault(); showView('remove-lease')">Remove Lease</a>
+        </div>
+      </div>
+      <div class="nav-item" onclick="showView('about')">About Me</div>
+      <div class="nav-item" onclick="promptAdmin()">Administrator</div>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <div id="view-home" class="view active">
+      <div class="home-hero">
+        <h1>Lease Administration Tool V1.05</h1>
+        <p class="slogan">Clarity in every clause. Confidence in every charge.</p>
+      </div>
+      <div class="workflow-grid">
+        <div class="workflow-card" onclick="startWorkflow('abstraction')">
+          <div class="icon">📄</div>
+          <h3>Lease Abstraction</h3>
+          <p>Upload or select leases and generate verified abstracts.</p>
+        </div>
+        <div class="workflow-card" onclick="startWorkflow('schedule')">
+          <div class="icon">📅</div>
+          <h3>Generate Charge Schedule</h3>
+          <p>Create contractual charge schedules from lease terms.</p>
+        </div>
+        <div class="workflow-card" onclick="startWorkflow('reconciliation')">
+          <div class="icon">⚖️</div>
+          <h3>Automatic Reconciliation</h3>
+          <p>CAM / OpEx, Rent & Ledger, and Security Deposit reconciliations.</p>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+        <div class="card">
+          <div class="section-title">Recent Work</div>
+          <ul class="recent-list" id="recentList"></ul>
+        </div>
+        <div class="card">
+          <div class="section-title">Notifications</div>
+          <ul class="notif-list" id="notifList"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Remaining views keep the same structure as V1.05 – only the theme system and night toggle are new -->
+    <div id="view-leases-list" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:0.75rem; color:var(--primary);">View Leases</h2>
+      <div class="sort-bar">
+        <label style="font-size:0.875rem; color:var(--muted);">Sort by:</label>
+        <select id="leaseSort" onchange="renderLeaseList()">
+          <option value="name">Tenant Name</option>
+          <option value="property">Property</option>
+          <option value="expiry">Expiry Date</option>
+          <option value="renewal">Renewal Notice</option>
+        </select>
+      </div>
+      <ul class="lease-list" id="leaseList"></ul>
+    </div>
+
+    <div id="view-add-lease" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Add Lease</h2>
+      <div class="card">
+        <div class="upload-zone" onclick="document.getElementById('addFiles').click()">
+          <p>Drop files or click to browse (PDF, DOCX, DOC, TXT…)</p>
+          <input type="file" id="addFiles" multiple accept=".pdf,.doc,.docx,.txt,.rtf,.odt">
+        </div>
+        <div style="margin-top:1.25rem; display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-group"><label>Tenant Name *</label><input type="text" id="newTenantName"></div>
+          <div class="form-group"><label>Unit / Suite</label><input type="text" id="newSuite"></div>
+          <div class="form-group"><label>Area (SF)</label><input type="number" id="newArea"></div>
+          <div class="form-group"><label>Base Rent ($/SF/year)</label><input type="number" step="0.01" id="newRentPSF"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addNewLease()">Add Lease</button>
+      </div>
+    </div>
+
+    <div id="view-remove-lease" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Remove Lease</h2>
+      <div class="card"><ul class="lease-list" id="removeLeaseList"></ul></div>
+    </div>
+
+    <div id="view-lease-viewer" class="view">
+      <div class="back-link" onclick="showView('leases-list')">← Back to Lease List</div>
+      <div class="viewer-layout" id="viewerLayout">
+        <div class="lease-pane">
+          <div class="lease-toolbar">
+            <strong id="viewerTitle" style="margin-right:auto; color:var(--primary);"></strong>
+            <button class="btn btn-primary btn-sm" onclick="generateAbsFromViewer()">Generate Abstraction</button>
+            <button class="btn btn-primary btn-sm" onclick="generateSchedFromViewer()">Generate Charge Schedule</button>
+            <button class="btn btn-secondary btn-sm" id="toggleChatBtn" onclick="toggleViewerChat()">Hide Assistant</button>
+          </div>
+          <div class="lease-content" id="leaseContent"></div>
+        </div>
+        <div class="chat-side" id="viewerChat">
+          <div class="chat-header">
+            <span>AI Assistant</span>
+            <div class="chat-header-actions">
+              <button class="btn btn-ghost btn-sm" title="Past Chats" onclick="openPastChats('viewer')">🕒</button>
+              <button class="btn btn-ghost btn-sm" onclick="toggleViewerChat()">✕</button>
+            </div>
+          </div>
+          <div class="chat-messages" id="viewerChatMessages"></div>
+          <div class="chat-input">
+            <input type="text" id="viewerChatInput" placeholder="Ask about this lease…" onkeydown="if(event.key==='Enter')sendViewerChat()">
+            <button class="btn btn-primary btn-sm" onclick="sendViewerChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-abstraction" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Lease Abstraction</h2>
+      <div class="card">
+        <p style="margin-bottom:0.75rem; font-weight:500;">Select a Lease</p>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.25rem;" id="absSelectButtons"></div>
+        <div class="upload-zone" onclick="document.getElementById('absFiles').click()">
+          <p>Drop lease documents or click to browse</p>
+          <input type="file" id="absFiles" multiple accept=".pdf,.doc,.docx,.txt,.rtf,.odt">
+        </div>
+      </div>
+      <div id="abs-processing" class="card" style="display:none;">
+        <p>Extracting provisions…</p>
+        <div class="progress-bar"><div class="progress-fill" id="absProgress"></div></div>
+      </div>
+      <div id="abs-result" style="display:none;"></div>
+    </div>
+
+    <div id="view-schedule" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Generate Charge Schedule</h2>
+      <div class="card">
+        <p style="margin-bottom:1rem;">Select a Lease</p>
+        <div style="display:flex; gap:0.75rem; flex-wrap:wrap;" id="scheduleButtons"></div>
+      </div>
+      <div id="schedule-result" style="display:none;"></div>
+    </div>
+
+    <div id="view-reconciliation" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Automatic Reconciliation</h2>
+      <div class="recon-layout">
+        <div>
+          <div class="recon-grid">
+            <div class="slot-card">
+              <h4>1. Lease / Charge Schedule</h4>
+              <select id="reconLeaseSelect" style="width:100%; margin-bottom:0.75rem; padding:0.5rem; border-radius:6px; border:1px solid var(--border); background:var(--card); color:var(--text);"></select>
+              <div class="upload-zone" style="padding:1.1rem;" onclick="document.getElementById('reconLeaseFile').click()">
+                <p style="font-size:0.9rem;">Upload lease or schedule</p>
+                <input type="file" id="reconLeaseFile" accept=".pdf,.xls,.xlsx,.csv,.doc,.docx">
+              </div>
+            </div>
+            <div class="slot-card">
+              <h4>2. Actuals (Ledger / Statements)</h4>
+              <div class="upload-zone" style="padding:1.1rem;" onclick="document.getElementById('reconLedgerFiles').click()">
+                <p style="font-size:0.9rem;">Upload ledger / statements</p>
+                <input type="file" id="reconLedgerFiles" multiple accept=".pdf,.xls,.xlsx,.csv,.doc,.docx">
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center; margin:1.25rem 0;">
+            <button class="btn btn-primary" onclick="runFullReconciliation()">Run Quick Scan</button>
+          </div>
+          <div class="card">
+            <p style="font-size:0.9rem; color:var(--muted); margin-bottom:0.75rem;">Demo packages:</p>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;" id="reconButtons"></div>
+          </div>
+          <div id="recon-result" style="display:none; margin-top:1.25rem;"></div>
+        </div>
+        <div class="chat-side" style="height: calc(100vh - 200px); min-height: 520px;">
+          <div class="chat-header">
+            <span>Reconciliation Assistant</span>
+            <div class="chat-header-actions">
+              <button class="btn btn-ghost btn-sm" title="Past Chats" onclick="openPastChats('recon')">🕒</button>
+              <button class="btn btn-ghost btn-sm" onclick="clearReconChat()">✕</button>
+            </div>
+          </div>
+          <div class="chat-messages" id="reconChatMessages"></div>
+          <div class="chat-input">
+            <input type="text" id="reconChatInput" placeholder="Ask about CAM, Rent Ledger, or Security Deposit…" onkeydown="if(event.key==='Enter')sendReconChat()">
+            <button class="btn btn-primary btn-sm" onclick="sendReconChat()">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-about" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <div class="card about-content">
+        <h2 style="color:var(--primary); margin-bottom:0.5rem;">About Me</h2>
+        <p>Hello there. My name is Mark and I am a 23 year old Business Administration graduate (BBA) from the Lazaridis School of Business & Economics. Since graduating, I have worked in a few roles within the downtown Toronto property management industry for Kipling Group. After observing some of the industry's functions, I have developed this tool to help speed up what is considered to be tedious and time consuming work. I am open to further collaboration with anyone who thinks this tool can benefit them.</p>
+        <p style="margin-top:1.25rem;">I am currently looking for work in the property management industry, particularly in specialized roles such as Lease Administration. This is my first coding project.</p>
+      </div>
+    </div>
+
+    <div id="view-admin" class="view">
+      <div class="back-link" onclick="showView('home')">← Back to Home</div>
+      <h2 style="margin-bottom:1rem; color:var(--primary);">Administrator</h2>
+      <div class="card"><button class="btn btn-secondary btn-sm" onclick="resetDemoData()">Reset Demo Data</button></div>
+    </div>
+  </main>
+</div>
+
+<!-- Night Mode Toggle (crescent moon) – sits above the chat button -->
+<button class="night-toggle" id="nightToggle" title="Toggle Night Mode" onclick="toggleNightMode()">🌙</button>
+
+<!-- Floating AI Assistant button -->
+<button class="floating-chat-toggle" id="globalChatToggle" onclick="toggleGlobalChat()">💬</button>
+
+<div id="globalChatPanel" style="display:none; position:fixed; bottom:1.5rem; right:1.5rem; width:360px; max-height:500px; background:var(--card); border-radius:12px; box-shadow:0 10px 40px rgba(0,0,0,0.25); border:1px solid var(--border); z-index:1000; flex-direction:column;">
+  <div class="chat-header" style="border-radius:12px 12px 0 0;">
+    <span>AI Assistant</span>
+    <div class="chat-header-actions">
+      <button class="btn btn-ghost btn-sm" title="Past Chats" onclick="openPastChats('global')">🕒</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleGlobalChat()">✕</button>
+    </div>
+  </div>
+  <div id="globalChatMessages" class="chat-messages" style="max-height:340px;"></div>
+  <div class="chat-input">
+    <input type="text" id="globalChatInput" placeholder="Ask anything…" onkeydown="if(event.key==='Enter')sendGlobalChat()">
+    <button class="btn btn-primary btn-sm" onclick="sendGlobalChat()">Send</button>
+  </div>
+</div>
+
+<!-- Past Chats / Notif / Admin modals remain the same structure -->
+<div class="modal-overlay" id="pastChatsModal">
+  <div class="modal">
+    <h3 style="color:var(--primary); margin-bottom:1rem;">Past Chats</h3>
+    <div id="pastChatsList"></div>
+    <div style="margin-top:1.25rem; text-align:right;"><button class="btn btn-secondary" onclick="closePastChats()">Close</button></div>
+  </div>
+</div>
+<div class="modal-overlay" id="notifModal">
+  <div class="modal">
+    <h3 id="notifModalTitle" style="color:var(--primary); margin-bottom:0.75rem;"></h3>
+    <p id="notifModalBody" style="margin-bottom:1.25rem;"></p>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeNotifModal()">Close</button>
+      <button class="btn btn-danger" id="notifDismissBtn">Dismiss</button>
+    </div>
+  </div>
+</div>
+<div class="modal-overlay" id="adminModal">
+  <div class="modal">
+    <h3>Administrator</h3>
+    <div class="form-group"><label>Password</label><input type="password" id="adminPass" onkeydown="if(event.key==='Enter')checkAdmin()"></div>
+    <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeAdminModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="checkAdmin()">Enter</button>
+    </div>
+    <p style="font-size:0.8rem; color:var(--muted); margin-top:1rem;">Default: admin123</p>
+  </div>
+</div>
+
+<script>
+/* ===== NIGHT MODE ===== */
+function toggleNightMode() {
+  document.body.classList.toggle('dark');
+  const isDark = document.body.classList.contains('dark');
+  localStorage.setItem('la_night_v105', isDark ? '1' : '0');
+  document.getElementById('nightToggle').textContent = isDark ? '☀️' : '🌙';
+  document.getElementById('nightToggle').title = isDark ? 'Switch to Light Mode' : 'Switch to Night Mode';
+}
+// Restore preference on load
+if (localStorage.getItem('la_night_v105') === '1') {
+  document.body.classList.add('dark');
+  document.getElementById('nightToggle').textContent = '☀️';
+  document.getElementById('nightToggle').title = 'Switch to Light Mode';
+}
+
+/* ===== Core data (same as previous V1.05) ===== */
+const PROPERTY = "Maplewood Commerce Centre";
+const DEFAULT_TENANTS = [
+  {id:1,name:"Northstar Design Studio Ltd.",suite:"Suite 210",unit:"210",area:4250,share:4.25,structure:"Triple Net (NNN)",baseRentPSF:28.50,escalation:3.0,commencement:"2023-04-01",expiration:"2028-03-31",renewalNotice:"2027-09-30",securityDeposit:30281.25,landlord:"Maplewood Holdings LLC",property:PROPERTY,fullText:"Comprehensive NNN lease…"},
+  {id:2,name:"Harbour & Finch Retail Inc.",suite:"Suite 105",unit:"105",area:6800,share:6.80,structure:"Retail + Percentage Rent",baseRentPSF:42.00,escalation:2.5,commencement:"2022-09-01",expiration:"2027-08-31",renewalNotice:"2026-08-31",securityDeposit:71400,landlord:"Maplewood Holdings LLC",property:PROPERTY,fullText:"Retail lease…"},
+  {id:3,name:"Pinecrest Technology Solutions Ltd.",suite:"Suites 400-410",unit:"400-410",area:12500,share:12.50,structure:"Modified Gross",baseRentPSF:32.00,escalation:2.75,commencement:"2024-01-15",expiration:"2029-01-14",renewalNotice:"2028-01-14",securityDeposit:100000,landlord:"Maplewood Holdings LLC",property:PROPERTY,fullText:"Modified Gross lease…"}
+];
+let tenants = JSON.parse(localStorage.getItem('la_tenants_v105')) || JSON.parse(JSON.stringify(DEFAULT_TENANTS));
+let nextId = 4, currentLeaseId = null, viewerChatOpen = true;
+let adminPassword = localStorage.getItem('la_admin_pass') || 'admin123';
+let notifications = [
+  {id:1,title:"Maplewood Commerce Centre | Lease Expiration – Northstar",body:"Northstar (Unit 210) expires 31 Mar 2028."},
+  {id:2,title:"Maplewood Commerce Centre | CAM Reconciliation Ready",body:"Harbour & Finch 2025 CAM package ready."},
+  {id:3,title:"Maplewood Commerce Centre | Renewal Notice Approaching",body:"Harbour & Finch renewal notice due 31 Aug 2026."}
+];
+let chatHistory = JSON.parse(localStorage.getItem('la_chats_v105')) || {global:[], viewer:[], recon:[]};
+let lastReconOutput = null;
+const RECON_FINDINGS = {
+  1:[{charge:"CAM 2025",provision:"4.25% share",expected:36125,actual:42500,variance:6375,explanation:"Used 5% instead of 4.25%.",action:"Request $6,375 credit."}],
+  2:[{charge:"Admin Fee 2025",provision:"Max 3%",expected:14280,actual:19040,variance:4760,explanation:"Charged 4% vs 3% cap.",action:"Request $4,760 credit."}],
+  3:[{charge:"OpEx 2025",provision:"Capital excluded",expected:98750,actual:142500,variance:43750,explanation:"Capital roof included.",action:"Request $43,750 credit."}]
+};
+
+function formatMoney(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n);}
+function saveChats(){localStorage.setItem('la_chats_v105',JSON.stringify(chatHistory));}
+
+function showView(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const el=document.getElementById('view-'+id); if(el) el.classList.add('active');
+  // Hide global chat button on pages that already have side assistants
+  document.body.classList.toggle('hide-global-chat', id==='lease-viewer' || id==='reconciliation');
+  if(id==='home') renderHome();
+  if(id==='leases-list') renderLeaseList();
+  if(id==='remove-lease') renderRemoveList();
+  if(id==='schedule') renderScheduleButtons();
+  if(id==='abstraction') renderAbsSelect();
+  if(id==='reconciliation'){ renderReconButtons(); populateReconSelect(); initReconChat(); }
+}
+
+function renderHome(){
+  const recent = [
+    {t:"Northstar – Lease Abstract", ty:"Abstract", fn:()=>{showView('abstraction');loadDemoLease(1);}},
+    {t:"Harbour & Finch – Charge Schedule", ty:"Schedule", fn:()=>{showView('schedule');generateSchedule(2);}},
+    {t:"Pinecrest – Reconciliation Report", ty:"Recon", fn:()=>{showView('reconciliation');runDemoRecon(3);}}
+  ];
+  document.getElementById('recentList').innerHTML = recent.map((r,i)=>`<li onclick="window._ra[${i}]()"><div><strong>${r.t}</strong></div><span class="badge">${r.ty}</span></li>`).join('');
+  window._ra = recent.map(r=>r.fn);
+  document.getElementById('notifList').innerHTML = notifications.map(n=>`<li class="notif-item" onclick="openNotif(${n.id})"><div><strong>${n.title.split(' | ')[0]}</strong><br><span style="font-size:0.85rem;">${n.title.split(' | ')[1]||''}</span></div></li>`).join('') || '<li style="color:var(--muted)">No notifications</li>';
+}
+function openNotif(id){const n=notifications.find(x=>x.id===id);if(!n)return;document.getElementById('notifModalTitle').textContent=n.title;document.getElementById('notifModalBody').textContent=n.body;document.getElementById('notifModal').classList.add('show');document.getElementById('notifDismissBtn').onclick=()=>{notifications=notifications.filter(x=>x.id!==id);closeNotifModal();renderHome();};}
+function closeNotifModal(){document.getElementById('notifModal').classList.remove('show');}
+
+function renderLeaseList(){
+  const sort=document.getElementById('leaseSort')?.value||'name';
+  let list=[...tenants];
+  if(sort==='name') list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='property') list.sort((a,b)=>(a.property||'').localeCompare(b.property||''));
+  else if(sort==='expiry') list.sort((a,b)=>(a.expiration||'').localeCompare(b.expiration||''));
+  else if(sort==='renewal') list.sort((a,b)=>(a.renewalNotice||'').localeCompare(b.renewalNotice||''));
+  document.getElementById('leaseList').innerHTML=list.map(t=>`<li onclick="openLeaseViewer(${t.id})"><div><strong>${t.name}</strong><br><span style="font-size:0.85rem;color:var(--muted);">${t.suite} · ${t.area.toLocaleString()} SF · Exp ${t.expiration}</span></div><span class="badge">View</span></li>`).join('')||'<li>No leases</li>';
+}
+function renderRemoveList(){document.getElementById('removeLeaseList').innerHTML=tenants.map(t=>`<li><div><strong>${t.name}</strong></div><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeLease(${t.id})">Remove</button></li>`).join('')||'<li>No leases</li>';}
+function renderScheduleButtons(){document.getElementById('scheduleButtons').innerHTML=tenants.map(t=>`<button class="btn btn-primary" onclick="generateSchedule(${t.id})">${t.name}</button>`).join('');}
+function renderAbsSelect(){document.getElementById('absSelectButtons').innerHTML=tenants.map(t=>`<button class="btn btn-primary" onclick="loadDemoLease(${t.id})">${t.name}</button>`).join('');}
+function renderReconButtons(){document.getElementById('reconButtons').innerHTML=tenants.filter(t=>RECON_FINDINGS[t.id]).map(t=>`<button class="btn btn-secondary btn-sm" onclick="runDemoRecon(${t.id})">Demo: ${t.name}</button>`).join('');}
+function populateReconSelect(){document.getElementById('reconLeaseSelect').innerHTML='<option value="">— Select lease —</option>'+tenants.map(t=>`<option value="${t.id}">${t.name}</option>`).join('');}
+
+function addNewLease(){
+  const name=document.getElementById('newTenantName').value.trim(); if(!name) return alert('Tenant name required');
+  const area=+document.getElementById('newArea').value||0, psf=+document.getElementById('newRentPSF').value||0, suite=document.getElementById('newSuite').value.trim()||'TBD';
+  tenants.push({id:nextId++,name,suite,unit:suite,area,share:area?+(area/100000*100).toFixed(2):0,structure:"Uploaded",baseRentPSF:psf,escalation:2.5,property:PROPERTY,commencement:new Date().toISOString().slice(0,10),expiration:"TBD",fullText:`Uploaded lease ${name}`});
+  localStorage.setItem('la_tenants_v105',JSON.stringify(tenants)); showView('leases-list');
+}
+function removeLease(id){if(!confirm('Remove this lease?'))return; tenants=tenants.filter(t=>t.id!==id); localStorage.setItem('la_tenants_v105',JSON.stringify(tenants)); renderRemoveList();}
+
+function openLeaseViewer(id){
+  currentLeaseId=id; const t=tenants.find(x=>x.id===id);
+  document.getElementById('viewerTitle').textContent=`${t.name} — ${t.suite}`;
+  document.getElementById('leaseContent').innerHTML=(t.fullText||'').replace(/\n/g,'<br>');
+  document.getElementById('viewerChatMessages').innerHTML=`<div class="msg assistant">Focused on <strong>${t.name}</strong> (${t.area.toLocaleString()} SF).</div>`;
+  showView('lease-viewer');
+}
+function toggleViewerChat(){viewerChatOpen=!viewerChatOpen; const l=document.getElementById('viewerLayout'),c=document.getElementById('viewerChat');
+  if(viewerChatOpen){l.classList.remove('chat-closed');c.classList.remove('hidden');}else{l.classList.add('chat-closed');c.classList.add('hidden');}}
+function generateAbsFromViewer(){if(currentLeaseId){showView('abstraction');loadDemoLease(currentLeaseId);}}
+function generateSchedFromViewer(){if(currentLeaseId){showView('schedule');generateSchedule(currentLeaseId);}}
+
+/* Past Chats, Reconciliation AI, Abstract, Schedule, etc. – same logic as previous version */
+function openPastChats(ctx){
+  const list = chatHistory[ctx] || [];
+  document.getElementById('pastChatsList').innerHTML = list.length ? list.map((c,i)=>`
+    <div class="past-chat-item">
+      <div onclick="loadPastChat('${ctx}',${i})" style="flex:1;"><strong>${c.title||'Chat '+(i+1)}</strong><br><span style="font-size:0.8rem;color:var(--muted);">${c.date||''}</span></div>
+      <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePastChat('${ctx}',${i})">Delete</button>
+    </div>`).join('') : '<p style="color:var(--muted);">No past chats yet.</p>';
+  document.getElementById('pastChatsModal').classList.add('show');
+}
+function closePastChats(){document.getElementById('pastChatsModal').classList.remove('show');}
+function deletePastChat(ctx,i){chatHistory[ctx].splice(i,1);saveChats();openPastChats(ctx);}
+function loadPastChat(ctx,i){
+  const c=chatHistory[ctx][i]; if(!c) return; closePastChats();
+  if(ctx==='recon') document.getElementById('reconChatMessages').innerHTML=c.html;
+  else if(ctx==='viewer') document.getElementById('viewerChatMessages').innerHTML=c.html;
+  else { document.getElementById('globalChatMessages').innerHTML=c.html; document.getElementById('globalChatPanel').style.display='flex'; }
+}
+
+function initReconChat(){
+  document.getElementById('reconChatMessages').innerHTML = `<div class="msg assistant">Hello! I can help with <strong>CAM / OpEx</strong>, <strong>Rent & Ledger</strong>, and <strong>Security Deposit</strong> reconciliations. Tell me which one you need (or say “all three”) and I will guide you on the files to upload.</div>`;
+}
+function sendReconChat(){
+  const input=document.getElementById('reconChatInput'); const msg=input.value.trim(); if(!msg) return;
+  const box=document.getElementById('reconChatMessages');
+  box.innerHTML += `<div class="msg user">${msg}</div>`; input.value='';
+  setTimeout(()=>{
+    const q=msg.toLowerCase();
+    let reply = /cam|opex|operating/.test(q) ? `For CAM/OpEx upload the lease/charge schedule + year-end actual cost statement (PDF/Excel/CSV). Then say “run CAM reconciliation”.` :
+                /rent|ledger/.test(q) ? `For Rent & Ledger upload the lease + tenant ledger + bank deposits.` :
+                /security|deposit/.test(q) ? `For Security Deposit upload the lease + move-out costs + final ledger.` :
+                /all three|combined|produce|run/.test(q) ? (runFullReconciliation(), `Combined report generated on the left. You can download it as PDF, Word or CSV.`) :
+                `I can help with CAM/OpEx, Rent & Ledger, or Security Deposit reconciliations. Which would you like?`;
+    box.innerHTML += `<div class="msg assistant">${reply}</div>`; box.scrollTop = box.scrollHeight;
+  }, 300);
+}
+function clearReconChat(){ initReconChat(); }
+
+function runDemoRecon(id){const t=tenants.find(x=>x.id===id); const f=RECON_FINDINGS[id]||[]; lastReconOutput={tenant:t.name,findings:f}; showCombinedReconOutput(t,f);}
+function runFullReconciliation(){
+  const id=parseInt(document.getElementById('reconLeaseSelect').value)||1;
+  runDemoRecon(id);
+}
+function showCombinedReconOutput(t, findings){
+  const el=document.getElementById('recon-result'); el.style.display='block';
+  const total=findings.reduce((s,f)=>s+(f.variance||0),0);
+  el.innerHTML=`<div class="card">
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+      <h3 style="color:var(--primary);">Combined Reconciliation — ${t.name}</h3>
+      <div class="download-wrap"><button class="btn btn-secondary btn-sm">Download As… ▾</button>
+        <div class="download-menu"><button onclick="alert('CSV ready')">CSV</button><button onclick="alert('Word ready')">Word / Doc</button><button onclick="alert('PDF ready')">PDF</button></div></div>
+    </div>
+    <p style="font-size:0.85rem;color:var(--muted);">CAM/OpEx + Rent & Ledger + Security Deposit</p>
+    ${findings.map(f=>`<div style="border:1px solid var(--border);border-radius:8px;padding:0.85rem;margin:0.5rem 0;"><strong>${f.charge}</strong> — <span class="text-danger">${formatMoney(f.variance)}</span><br>${f.explanation}</div>`).join('')}
+    <div style="margin-top:1rem;padding:0.75rem;background:var(--card-alt);border-radius:8px;">Total variance: <strong class="${total>0?'text-danger':''}">${formatMoney(total)}</strong></div>
+  </div>`;
+}
+
+function startWorkflow(t){if(t==='abstraction')showView('abstraction');if(t==='schedule')showView('schedule');if(t==='reconciliation')showView('reconciliation');}
+function loadDemoLease(id){
+  document.getElementById('abs-processing').style.display='block'; document.getElementById('abs-result').style.display='none';
+  let p=0; const iv=setInterval(()=>{p+=20;document.getElementById('absProgress').style.width=Math.min(p,100)+'%';
+    if(p>=100){clearInterval(iv);setTimeout(()=>showAbstract(id),200);}},180);
+}
+function showAbstract(id){
+  const t=tenants.find(x=>x.id===id);
+  document.getElementById('abs-processing').style.display='none';
+  const el=document.getElementById('abs-result'); el.style.display='block';
+  el.innerHTML=`<div class="card">
+    <h3 style="color:var(--primary);margin-bottom:1rem;">Lease Abstract — ${t.name}</h3>
+    <div class="abstract-section"><h4>1. Core Administration & Identification</h4>
+      <div class="field-row"><span class="field-label">Landlord</span><span>${t.landlord||'Maplewood Holdings LLC'}</span></div>
+      <div class="field-row"><span class="field-label">Tenant</span><span>${t.name}</span></div>
+      <div class="field-row"><span class="field-label">Unit #</span><span>${t.unit||t.suite}</span></div>
+      <div class="field-row"><span class="field-label">SF</span><span>${t.area.toLocaleString()} SF</span></div>
+      <div class="field-row"><span class="field-label">Pro-Rata Share</span><span>${t.share}%</span></div>
+    </div>
+    <div class="abstract-section"><h4>2. Critical Dates</h4>
+      <div class="field-row"><span class="field-label">Commencement</span><span>${t.commencement}</span></div>
+      <div class="field-row"><span class="field-label">Expiration</span><span>${t.expiration}</span></div>
+    </div>
+    <div class="abstract-section"><h4>3. Rent</h4>
+      <div class="field-row"><span class="field-label">Base Rent</span><span>$${t.baseRentPSF}/SF/year</span></div>
+      <div class="field-row"><span class="field-label">Structure</span><span>${t.structure}</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="alert('Verified.')">Accept & Verify</button>
+  </div>`;
+}
+function generateSchedule(id){
+  const t=tenants.find(x=>x.id===id); const el=document.getElementById('schedule-result'); el.style.display='block';
+  let rows='', rent=t.baseRentPSF*t.area;
+  for(let y=2024;y<=2027;y++){const cam=Math.round(850000*(t.share/100)); rows+=`<tr><td>${y}</td><td class="text-right">${formatMoney(rent)}</td><td class="text-right">${formatMoney(cam)}</td><td class="text-right"><strong>${formatMoney(rent+cam)}</strong></td></tr>`; rent=Math.round(rent*(1+(t.escalation||0)/100));}
+  el.innerHTML=`<div class="card"><h3 style="color:var(--primary);margin-bottom:1rem;">Charge Schedule — ${t.name}</h3>
+    <table><thead><tr><th>Period</th><th class="text-right">Base Rent</th><th class="text-right">CAM</th><th class="text-right">Total</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+function answerAboutLease(id,q){
+  const t=tenants.find(x=>x.id===id); if(!t) return "Lease not found.";
+  q=q.toLowerCase();
+  if(/^(hi|hello|hey)\b/.test(q)) return `Hello! How can I help with ${t.name}?`;
+  if(/sf|square|area/.test(q)) return `Area: <strong>${t.area.toLocaleString()} SF</strong>`;
+  if(/unit/.test(q)) return `Unit #: <strong>${t.unit||t.suite}</strong>`;
+  if(/rent/.test(q)) return `Base Rent: <strong>$${t.baseRentPSF}/SF/year</strong>`;
+  return `I can answer questions about Unit #, SF, rent, dates and more for ${t.name}.`;
+}
+function sendViewerChat(){
+  const i=document.getElementById('viewerChatInput'), m=i.value.trim(); if(!m||!currentLeaseId) return;
+  const b=document.getElementById('viewerChatMessages'); b.innerHTML+=`<div class="msg user">${m}</div>`; i.value='';
+  setTimeout(()=>{b.innerHTML+=`<div class="msg assistant">${answerAboutLease(currentLeaseId,m)}</div>`; b.scrollTop=b.scrollHeight;},280);
+}
+function toggleGlobalChat(){
+  const p=document.getElementById('globalChatPanel');
+  p.style.display = p.style.display==='flex' ? 'none' : 'flex';
+  if(p.style.display==='flex' && !document.getElementById('globalChatMessages').innerHTML)
+    document.getElementById('globalChatMessages').innerHTML=`<div class="msg assistant">Hello! Ask me about leases, abstracts, schedules or reconciliations.</div>`;
+}
+function sendGlobalChat(){
+  const i=document.getElementById('globalChatInput'), m=i.value.trim(); if(!m) return;
+  const b=document.getElementById('globalChatMessages'); b.innerHTML+=`<div class="msg user">${m}</div>`; i.value='';
+  setTimeout(()=>{
+    const q=m.toLowerCase();
+    let r = /^(hi|hello)/.test(q) ? `Hello! How can I help?` : `Ask about any lease or recent work.`;
+    b.innerHTML+=`<div class="msg assistant">${r}</div>`; b.scrollTop=b.scrollHeight;
+  },280);
+}
+
+function promptAdmin(){document.getElementById('adminModal').classList.add('show');}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('show');}
+function checkAdmin(){if(document.getElementById('adminPass').value===adminPassword){closeAdminModal();showView('admin');}else alert('Incorrect');}
+function resetDemoData(){if(confirm('Reset?')){tenants=JSON.parse(JSON.stringify(DEFAULT_TENANTS));localStorage.setItem('la_tenants_v105',JSON.stringify(tenants));location.reload();}}
+
+renderHome();
+</script>
+</body>
+</html>
